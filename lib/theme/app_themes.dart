@@ -1,7 +1,7 @@
 /*
  *     Copyright (C) 2026 Valeri Gokadze
  *
- *     Musify is free software: you can redistribute it and/or modify
+ *     Musifly is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
@@ -23,6 +23,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:musify/services/settings_manager.dart';
 import 'package:musify/theme/dynamic_color_compat.dart';
 
@@ -96,46 +97,63 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
   const pureBlackContainer = Color(0xFF121212);
   const pureBlackContainerHigh = Color(0xFF1A1A1A);
 
+  // Redesign: fundo escuro profundo consistente (estilo Spotify), mesmo
+  // fora do modo "pure black" — mantém a opção pure black como ainda mais escura.
+  const spotifyBg = Color(0xFF121212);
+  const spotifyElevated = Color(0xFF181818);
+  const spotifyContainerHigh = Color(0xFF282828);
+
   final bgColor = isLight
       ? colorScheme.surface
-      : (isPureBlack ? pureBlack : null);
+      : (isPureBlack ? pureBlack : spotifyBg);
 
   final cardBgColor = isLight
       ? colorScheme.surfaceContainerLow
-      : (isPureBlack ? pureBlackElevated : null);
+      : (isPureBlack ? pureBlackElevated : spotifyElevated);
 
-  // modified color scheme for pure black theme
-  final effectiveColorScheme = isPureBlack
-      ? colorScheme.copyWith(
-          surface: pureBlack,
-          surfaceContainerLowest: pureBlack,
-          surfaceContainerLow: pureBlackElevated,
-          surfaceContainer: pureBlackContainer,
-          surfaceContainerHigh: pureBlackContainerHigh,
-          surfaceContainerHighest: pureBlackContainerHigh,
-        )
-      : colorScheme;
+  // modified color scheme for dark redesign (aplica também fora do pure black)
+  final effectiveColorScheme = isLight
+      ? colorScheme
+      : colorScheme.copyWith(
+          surface: isPureBlack ? pureBlack : spotifyBg,
+          surfaceContainerLowest: isPureBlack ? pureBlack : spotifyBg,
+          surfaceContainerLow: isPureBlack ? pureBlackElevated : spotifyElevated,
+          surfaceContainer: isPureBlack ? pureBlackContainer : spotifyElevated,
+          surfaceContainerHigh: isPureBlack
+              ? pureBlackContainerHigh
+              : spotifyContainerHigh,
+          surfaceContainerHighest: isPureBlack
+              ? pureBlackContainerHigh
+              : spotifyContainerHigh,
+        );
+
+  final baseTextTheme = GoogleFonts.poppinsTextTheme(base.textTheme);
 
   return ThemeData(
     scaffoldBackgroundColor: bgColor,
     colorScheme: effectiveColorScheme,
     cardColor: cardBgColor,
+    textTheme: isLight
+        ? baseTextTheme
+        : baseTextTheme.apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          ),
     cardTheme: base.cardTheme.copyWith(
       elevation: 0,
       color: cardBgColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     appBarTheme: base.appBarTheme.copyWith(
       backgroundColor: bgColor,
       foregroundColor: effectiveColorScheme.primary,
       elevation: 0,
       scrolledUnderElevation: 0,
-      centerTitle: true,
-      titleTextStyle: TextStyle(
-        fontSize: 30,
-        fontFamily: 'paytoneOne',
-        fontWeight: FontWeight.w500,
-        color: effectiveColorScheme.primary,
+      centerTitle: false,
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 26,
+        fontWeight: FontWeight.w700,
+        color: isLight ? effectiveColorScheme.primary : Colors.white,
         letterSpacing: -0.5,
       ),
       toolbarHeight: 64,
@@ -149,29 +167,29 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       ),
     ),
     listTileTheme: base.listTileTheme.copyWith(
-      textColor: effectiveColorScheme.primary,
+      textColor: isLight ? effectiveColorScheme.primary : Colors.white,
       iconColor: effectiveColorScheme.primary,
     ),
     sliderTheme: base.sliderTheme.copyWith(
       year2023: false,
-      trackHeight: 12,
+      trackHeight: 4,
+      activeTrackColor: effectiveColorScheme.primary,
+      thumbColor: Colors.white,
       thumbSize: WidgetStateProperty.all(const Size(6, 30)),
     ),
     bottomSheetTheme: base.bottomSheetTheme.copyWith(
       backgroundColor: isLight
           ? colorScheme.surfaceContainerLow
-          : (isPureBlack ? pureBlackElevated : null),
+          : (isPureBlack ? pureBlackElevated : spotifyElevated),
     ),
     inputDecorationTheme: base.inputDecorationTheme.copyWith(
       filled: true,
       isDense: true,
       fillColor: isLight
           ? colorScheme.surfaceContainerHighest
-          : (isPureBlack
-                ? pureBlackContainerHigh
-                : colorScheme.surfaceContainerHigh),
+          : (isPureBlack ? pureBlackContainerHigh : spotifyContainerHigh),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.fromLTRB(18, 14, 20, 14),
@@ -179,36 +197,33 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     dialogTheme: base.dialogTheme.copyWith(
       backgroundColor: isLight
           ? colorScheme.surfaceContainerLow
-          : (isPureBlack ? pureBlackContainer : null),
+          : (isPureBlack ? pureBlackContainer : spotifyElevated),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
     ),
     navigationBarTheme: base.navigationBarTheme.copyWith(
       backgroundColor: bgColor,
       elevation: 0,
       height: 70,
-      indicatorColor: effectiveColorScheme.primaryContainer,
+      indicatorColor: effectiveColorScheme.primary.withValues(alpha: 0.15),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return IconThemeData(
-            color: effectiveColorScheme.onPrimaryContainer,
-            size: 24,
-          );
+          return IconThemeData(color: effectiveColorScheme.primary, size: 24);
         }
         return IconThemeData(
-          color: effectiveColorScheme.onSurfaceVariant,
+          color: isLight ? effectiveColorScheme.onSurfaceVariant : Colors.grey,
           size: 24,
         );
       }),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return TextStyle(
-            color: effectiveColorScheme.onSurface,
+            color: isLight ? effectiveColorScheme.onSurface : Colors.white,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           );
         }
         return TextStyle(
-          color: effectiveColorScheme.onSurfaceVariant,
+          color: isLight ? effectiveColorScheme.onSurfaceVariant : Colors.grey,
           fontSize: 12,
           fontWeight: FontWeight.w500,
         );
@@ -217,22 +232,22 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     navigationRailTheme: base.navigationRailTheme.copyWith(
       backgroundColor: bgColor,
       elevation: 0,
-      indicatorColor: effectiveColorScheme.primaryContainer,
+      indicatorColor: effectiveColorScheme.primary.withValues(alpha: 0.15),
       selectedIconTheme: IconThemeData(
-        color: effectiveColorScheme.onPrimaryContainer,
+        color: effectiveColorScheme.primary,
         size: 24,
       ),
       unselectedIconTheme: IconThemeData(
-        color: effectiveColorScheme.onSurfaceVariant,
+        color: isLight ? effectiveColorScheme.onSurfaceVariant : Colors.grey,
         size: 24,
       ),
       selectedLabelTextStyle: TextStyle(
-        color: effectiveColorScheme.onSurface,
+        color: isLight ? effectiveColorScheme.onSurface : Colors.white,
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
       unselectedLabelTextStyle: TextStyle(
-        color: effectiveColorScheme.onSurfaceVariant,
+        color: isLight ? effectiveColorScheme.onSurfaceVariant : Colors.grey,
         fontSize: 12,
         fontWeight: FontWeight.w500,
       ),
@@ -240,7 +255,7 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     popupMenuTheme: base.popupMenuTheme.copyWith(
       color: isLight
           ? colorScheme.surfaceContainerLow
-          : (isPureBlack ? pureBlackContainer : null),
+          : (isPureBlack ? pureBlackContainer : spotifyElevated),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     dividerTheme: base.dividerTheme.copyWith(
