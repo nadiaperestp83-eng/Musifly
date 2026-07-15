@@ -1,7 +1,7 @@
 /*
  *     Copyright (C) 2026 Valeri Gokadze
  *
- *     Musify is free software: you can redistribute it and/or modify
+ *     Musifly is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
@@ -21,7 +21,15 @@
 
 import 'package:flutter/material.dart';
 
+// Cor de destaque principal do redesign (estilo Spotify)
+const Color spotifyGreen = Color(0xFF1DB954);
+
+// Fundo escuro profundo usado no redesign
+const Color spotifyBackground = Color(0xFF121212);
+const Color spotifyCardBackground = Color(0xFF181818);
+
 const availableColors = <Color>[
+  Color(0xFF1DB954), // Spotify Green (novo destaque padrão)
   Color(0xFF009688), // Material Teal
   Color(0xFF2196F3), // Material Blue
   Color(0xFFBA68C8), // Material Purple Light
