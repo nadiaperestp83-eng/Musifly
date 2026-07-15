@@ -1,7 +1,7 @@
 /*
  *     Copyright (C) 2026 Valeri Gokadze
  *
- *     Musifly is free software: you can redistribute it and/or modify
+ *     Musify is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
@@ -112,6 +112,8 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       : (isPureBlack ? pureBlackElevated : spotifyElevated);
 
   // modified color scheme for dark redesign (aplica também fora do pure black)
+  // onSurface/onSurfaceVariant forçados para branco/cinza claro no escuro,
+  // pra não herdar tons pastel do dynamic color e ficar ilegível.
   final effectiveColorScheme = isLight
       ? colorScheme
       : colorScheme.copyWith(
@@ -125,6 +127,8 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
           surfaceContainerHighest: isPureBlack
               ? pureBlackContainerHigh
               : spotifyContainerHigh,
+          onSurface: Colors.white,
+          onSurfaceVariant: const Color(0xFFB3B3B3),
         );
 
   final baseTextTheme = GoogleFonts.poppinsTextTheme(base.textTheme);
@@ -146,7 +150,7 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     ),
     appBarTheme: base.appBarTheme.copyWith(
       backgroundColor: bgColor,
-      foregroundColor: effectiveColorScheme.primary,
+      foregroundColor: isLight ? effectiveColorScheme.primary : Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
@@ -158,11 +162,11 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       ),
       toolbarHeight: 64,
       iconTheme: IconThemeData(
-        color: effectiveColorScheme.onSurfaceVariant,
+        color: isLight ? effectiveColorScheme.onSurfaceVariant : Colors.white,
         size: 24,
       ),
       actionsIconTheme: IconThemeData(
-        color: effectiveColorScheme.onSurfaceVariant,
+        color: isLight ? effectiveColorScheme.onSurfaceVariant : Colors.white,
         size: 24,
       ),
     ),
@@ -191,6 +195,9 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(24),
         borderSide: BorderSide.none,
+      ),
+      hintStyle: TextStyle(
+        color: isLight ? null : const Color(0xFFB3B3B3),
       ),
       contentPadding: const EdgeInsets.fromLTRB(18, 14, 20, 14),
     ),
