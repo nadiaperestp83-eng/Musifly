@@ -23,7 +23,6 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -66,14 +65,10 @@ class Musify extends StatefulWidget {
     BuildContext context, {
     ThemeMode? newThemeMode,
     Locale? newLocale,
-    Color? newAccentColor,
-    bool? useSystemColor,
   }) async {
     context.findAncestorStateOfType<_MusifyState>()!.changeSettings(
       newThemeMode: newThemeMode,
       newLocale: newLocale,
-      newAccentColor: newAccentColor,
-      systemColorStatus: useSystemColor,
     );
   }
 
@@ -82,12 +77,7 @@ class Musify extends StatefulWidget {
 }
 
 class _MusifyState extends State<Musify> with WidgetsBindingObserver {
-  void changeSettings({
-    ThemeMode? newThemeMode,
-    Locale? newLocale,
-    Color? newAccentColor,
-    bool? systemColorStatus,
-  }) {
+  void changeSettings({ThemeMode? newThemeMode, Locale? newLocale}) {
     setState(() {
       if (newThemeMode != null) {
         themeMode = newThemeMode;
@@ -95,18 +85,6 @@ class _MusifyState extends State<Musify> with WidgetsBindingObserver {
       }
       if (newLocale != null) {
         languageSetting = newLocale;
-      }
-      if (newAccentColor != null) {
-        if (systemColorStatus != null &&
-            useSystemColor.value != systemColorStatus) {
-          useSystemColor.value = systemColorStatus;
-          addOrUpdateData<bool>(
-            'settings',
-            'useSystemColor',
-            systemColorStatus,
-          );
-        }
-        primaryColorSetting = newAccentColor;
       }
     });
   }
@@ -227,45 +205,37 @@ class _MusifyState extends State<Musify> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return DynamicColorBuilder(
-      builder: (lightColorScheme, darkColorScheme) {
-        final colorScheme = getAppColorScheme(
-          lightColorScheme,
-          darkColorScheme,
-        );
+    final colorScheme = getAppColorScheme();
 
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            systemNavigationBarColor: Colors.transparent,
-            systemNavigationBarContrastEnforced: true,
-            statusBarBrightness: brightness == Brightness.dark
-                ? Brightness.light
-                : Brightness.dark,
-            statusBarIconBrightness: brightness == Brightness.dark
-                ? Brightness.light
-                : Brightness.dark,
-            systemNavigationBarIconBrightness: brightness == Brightness.dark
-                ? Brightness.light
-                : Brightness.dark,
-          ),
-          child: MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            themeMode: themeMode,
-            darkTheme: getAppTheme(colorScheme),
-            theme: getAppTheme(colorScheme),
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: appSupportedLocales,
-            locale: languageSetting,
-            routerConfig: NavigationManager.router,
-          ),
-        );
-      },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarContrastEnforced: true,
+        statusBarBrightness: brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarIconBrightness: brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+        systemNavigationBarIconBrightness: brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      child: MaterialApp.router(
+        themeMode: themeMode,
+        darkTheme: getAppTheme(colorScheme),
+        theme: getAppTheme(colorScheme),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: appSupportedLocales,
+        locale: languageSetting,
+        routerConfig: NavigationManager.router,
+      ),
     );
   }
 }
@@ -326,73 +296,64 @@ Future<void> initialisation() async {
 }
 
 void handleIncomingLink(Uri? uri) async {
-  if (uri != null && uri.scheme == 'musify' && uri.host == 'playlist') {
-    try {
-      if (uri.pathSegments[0] == 'custom') {
-        final encodedPlaylist = uri.pathSegments[1];
+  if (uri == null || uri.scheme != 'musify' || uri.host != 'playlist') return;
 
-        final playlist = await PlaylistSharingService.decodeAndExpandPlaylist(
-          encodedPlaylist,
-        );
+  if (uri.pathSegments.length < 2 || uri.pathSegments[0] != 'custom') return;
 
-        if (playlist != null) {
-          // Ensure the incoming playlist has a unique id so it can be removed later
-          if (playlist['ytid'] == null || playlist['ytid'].toString().isEmpty) {
-            playlist['ytid'] = PlaylistUtils.generateCustomPlaylistId();
-          }
-          // Check for duplicate by title and song ytids
-          final incomingYtids = (playlist['list'] as List<dynamic>)
-              .map((s) => s['ytid'].toString())
-              .toList();
+  try {
+    final encodedPlaylist = uri.pathSegments[1];
+    final playlist = await PlaylistSharingService.decodeAndExpandPlaylist(
+      encodedPlaylist,
+    );
 
-          final exists = userCustomPlaylists.value.any((p) {
-            if (p['title'] != playlist['title']) return false;
-            final existingList = (p['list'] as List<dynamic>?) ?? [];
-            final existingYtids = existingList
-                .map((s) => s['ytid']?.toString())
-                .where((e) => e != null)
-                .toList();
-            if (existingYtids.length != incomingYtids.length) return false;
-            for (var i = 0; i < incomingYtids.length; i++) {
-              if (existingYtids[i] != incomingYtids[i]) return false;
-            }
-            return true;
-          });
+    if (playlist == null) {
+      _showPlaylistError();
+      return;
+    }
 
-          if (exists) {
-            showToast(
-              NavigationManager().context,
-              NavigationManager().context.l10n!.playlistAlreadyExists,
-            );
-          } else {
-            userCustomPlaylists.value = [
-              ...userCustomPlaylists.value,
-              playlist,
-            ];
-            unawaited(
-              addOrUpdateData<List>(
-                'user',
-                'customPlaylists',
-                userCustomPlaylists.value,
-              ),
-            );
-            showToast(
-              NavigationManager().context,
-              '${NavigationManager().context.l10n!.addedSuccess}!',
-            );
-          }
-        } else {
-          showToast(
-            NavigationManager().context,
-            NavigationManager().context.l10n!.failedToLoadPlaylist,
-          );
-        }
-      }
-    } catch (e) {
+    // Ensure the incoming playlist has a unique id so it can be removed later
+    if (playlist['ytid'] == null || playlist['ytid'].toString().isEmpty) {
+      playlist['ytid'] = PlaylistUtils.generateCustomPlaylistId();
+    }
+
+    // Check for duplicate by title and song ytids
+    final incomingYtids = (playlist['list'] as List<dynamic>)
+        .map((s) => s['ytid'].toString())
+        .toList();
+
+    final isDuplicate = PlaylistUtils.playlistExists(
+      playlist,
+      incomingYtids,
+      userCustomPlaylists.value,
+    );
+
+    if (isDuplicate) {
       showToast(
         NavigationManager().context,
-        NavigationManager().context.l10n!.failedToLoadPlaylist,
+        NavigationManager().context.l10n!.playlistAlreadyExists,
+      );
+    } else {
+      userCustomPlaylists.value = [...userCustomPlaylists.value, playlist];
+      unawaited(
+        addOrUpdateData<List>(
+          'user',
+          'customPlaylists',
+          userCustomPlaylists.value,
+        ),
+      );
+      showToast(
+        NavigationManager().context,
+        '${NavigationManager().context.l10n!.addedSuccess}!',
       );
     }
+  } catch (e) {
+    _showPlaylistError();
   }
+}
+
+void _showPlaylistError() {
+  showToast(
+    NavigationManager().context,
+    NavigationManager().context.l10n!.failedToLoadPlaylist,
+  );
 }
