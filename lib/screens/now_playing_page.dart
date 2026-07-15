@@ -93,6 +93,8 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   }
 
   Widget _buildAppBar(BuildContext context, ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
@@ -108,6 +110,23 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
             ),
             onPressed: () => Navigator.pop(context),
           ),
+          // Redesign: título "NOW PLAYING" centralizado, igual ao mockup.
+          Expanded(
+            child: Center(
+              child: Text(
+                'NOW PLAYING',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                  color: isDark ? Colors.white : colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ),
+          // Espaçador com a mesma largura do botão de voltar, pra manter
+          // o título perfeitamente centralizado.
+          const SizedBox(width: 44),
         ],
       ),
     );
