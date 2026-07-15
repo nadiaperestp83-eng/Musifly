@@ -35,7 +35,6 @@ import 'package:musify/services/playlists_manager.dart';
 import 'package:musify/services/router_service.dart';
 import 'package:musify/services/settings_manager.dart';
 import 'package:musify/services/update_manager.dart';
-import 'package:musify/theme/app_colors.dart';
 import 'package:musify/theme/app_themes.dart';
 import 'package:musify/utilities/flutter_bottom_sheet.dart';
 import 'package:musify/utilities/flutter_toast.dart';
@@ -93,14 +92,9 @@ class SettingsPage extends StatelessWidget {
           icon: FluentIcons.options_24_filled,
         ),
         CustomBar(
-          context.l10n!.accentColor,
-          FluentIcons.color_24_regular,
-          borderRadius: commonCustomBarRadiusFirst,
-          onTap: () => _showAccentColorPicker(context),
-        ),
-        CustomBar(
           context.l10n!.themeMode,
           FluentIcons.weather_sunny_28_regular,
+          borderRadius: commonCustomBarRadiusFirst,
           onTap: () => _showThemeModePicker(context),
         ),
         CustomBar(
@@ -118,23 +112,6 @@ class SettingsPage extends StatelessWidget {
           FluentIcons.data_histogram_24_regular,
           onTap: () => context.push('/settings/equalizer'),
         ),
-        CustomBar(
-          context.l10n!.dynamicColor,
-          FluentIcons.toggle_left_24_regular,
-          trailing: Switch(
-            value: useSystemColor.value,
-            onChanged: (value) => _toggleSystemColor(context, value),
-          ),
-        ),
-        if (themeMode == ThemeMode.dark)
-          CustomBar(
-            context.l10n!.pureBlackTheme,
-            FluentIcons.color_background_24_regular,
-            trailing: Switch(
-              value: usePureBlackColor.value,
-              onChanged: (value) => _togglePureBlack(context, value),
-            ),
-          ),
         ValueListenableBuilder<bool>(
           valueListenable: predictiveBack,
           builder: (_, value, __) {
@@ -541,67 +518,6 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showAccentColorPicker(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    showCustomBottomSheet(
-      context,
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 5,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-          ),
-          shrinkWrap: true,
-          physics: const BouncingScrollPhysics(),
-          itemCount: availableColors.length,
-          itemBuilder: (context, index) {
-            final color = availableColors[index];
-            final isSelected = color == primaryColorSetting;
-
-            return GestureDetector(
-              onTap: () {
-                addOrUpdateData<int>(
-                  'settings',
-                  'accentColor',
-                  color.toARGB32(),
-                );
-                Musify.updateAppState(
-                  context,
-                  newAccentColor: color,
-                  useSystemColor: false,
-                );
-                showToast(context, context.l10n!.accentChangeMsg);
-                Navigator.pop(context);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(color: colorScheme.onSurface, width: 3)
-                      : null,
-                ),
-                child: isSelected
-                    ? Icon(
-                        FluentIcons.checkmark_20_filled,
-                        color: color.computeLuminance() > 0.5
-                            ? Colors.black
-                            : Colors.white,
-                        size: 24,
-                      )
-                    : null,
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   void _showThemeModePicker(BuildContext context) {
     final availableModes = [ThemeMode.system, ThemeMode.light, ThemeMode.dark];
     const modeIcons = [
@@ -718,24 +634,6 @@ class SettingsPage extends StatelessWidget {
         },
       ),
     );
-  }
-
-  void _toggleSystemColor(BuildContext context, bool value) {
-    addOrUpdateData<bool>('settings', 'useSystemColor', value);
-    useSystemColor.value = value;
-    Musify.updateAppState(
-      context,
-      newAccentColor: primaryColorSetting,
-      useSystemColor: value,
-    );
-    showToast(context, context.l10n!.settingChangedMsg);
-  }
-
-  void _togglePureBlack(BuildContext context, bool value) {
-    addOrUpdateData<bool>('settings', 'usePureBlackColor', value);
-    usePureBlackColor.value = value;
-    Musify.updateAppState(context);
-    showToast(context, context.l10n!.settingChangedMsg);
   }
 
   void _togglePredictiveBack(BuildContext context, bool value) {
