@@ -224,6 +224,7 @@ class _MusifyState extends State<Musify> with WidgetsBindingObserver {
       ),
       child: MaterialApp.router(
         themeMode: themeMode,
+        debugShowCheckedModeBanner: false,
         darkTheme: getAppTheme(colorScheme),
         theme: getAppTheme(colorScheme),
         localizationsDelegates: const [
