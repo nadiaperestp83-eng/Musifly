@@ -19,6 +19,10 @@
  *     please visit: https://github.com/gokadzev/Musify
  */
 
+// Import usado apenas pela extensão .harmonized() abaixo (ajuste de
+// contraste/harmonia de cor). Não é usado para ler cores dinâmicas do
+// sistema — essa lógica foi removida.
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
