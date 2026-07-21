@@ -71,6 +71,4 @@ flutter:
       fonts:
         - asset: assets/fonts/paytone/PaytoneOne-Regular.ttf
 
-dependency_overrides:
-  analyzer: 7.7.1
-  dart_style: 3.1.1
+
