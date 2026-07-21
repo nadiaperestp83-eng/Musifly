@@ -39,6 +39,4 @@ false_secrets:
   - "lib/src/videos/video_controller.dart"
   - "lib/src/videos/youtube_api_client.dart"
 
-dependency_overrides:
-  analyzer: 7.7.1
-  dart_style: 3.1.1
+
