@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
+      - name: Clean generated files
+        run: find lib -name "*.freezed.dart" -o -name "*.g.dart" | xargs rm -f
+
       - name: Generate code (freezed / json_serializable)
         run: dart run build_runner build --delete-conflicting-outputs
 
